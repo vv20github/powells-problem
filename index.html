@@ -49,7 +49,7 @@
             const data = new FormData(form);
             
             // Replace with your Google Apps Script Web App URL
-            const scriptURL = 'YOUR_GOOGLE_SCRIPT_URL_HERE';
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbwbmmShdVY1x1Ld6ujjWqk72MR-3yFtsbBho8JurrSaIQoFhbLCeEI_FO5-nDcO88IS/exec';
 
             fetch(scriptURL, { method: 'POST', body: data})
                 .then(response => {
