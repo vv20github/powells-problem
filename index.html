@@ -1,11 +1,72 @@
-<form>
-    <!-- Existing input fields -->
-    
-    <label for="natural_unemployment">Natural Unemployment:</label>
-    <input type="number" id="natural_unemployment" name="natural_unemployment" required>
-    
-    <label for="taylor_rate">Taylor Rule implied Interest Rate:</label>
-    <input type="number" id="taylor_rate" name="taylor_rate" step="0.1" required>
-    
-    <button type="submit">Submit</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYU Stern | Macro Forecast Survey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border-t-4 border-[#57068c]">
+        <div class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-gray-800">Your Forecast</h1>
+            <p class="text-sm text-gray-500 italic">The Global Economy | Prof. Venky</p>
+        </div>
+
+        <form id="forecastForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Name (optional)</label>
+                <input type="text" name="name"
+                    class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md focus:ring-[#57068c] focus:border-[#57068c] outline-none transition"
+                    placeholder="e.g. Jane Doe">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Exp Inflation, 3-6 months out (%)</label>
+                <input type="number" step="0.1" name="inflation" required 
+                    class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md focus:ring-[#57068c] focus:border-[#57068c] outline-none transition"
+                    placeholder="e.g. 2.5">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Natural Unemployment (u*), 3-6 months out (%)</label>
+                <input type="number" step="0.1" name="unemployment" required 
+                    class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md focus:ring-[#57068c] focus:border-[#57068c] outline-none transition"
+                    placeholder="e.g. 3.8">
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-[#57068c] text-white font-bold py-3 px-4 rounded-md hover:bg-[#450570] transition-colors duration-200 shadow-md">
+                Submit Forecast
+            </button>
+        </form>
+
+        <div id="successMsg" class="hidden mt-4 p-4 bg-green-100 text-green-700 text-center rounded-md">
+            Data transmitted. Check the lecture slide for the updated consensus.
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('forecastForm');
+        const msg = document.getElementById('successMsg');
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const data = new FormData(form);
+            
+            // Google Apps Script Web App URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbwbmmShdVY1x1Ld6ujjWqk72MR-3yFtsbBho8JurrSaIQoFhbLCeEI_FO5-nDcO88IS/exec';
+
+            // GitHub Pages runs on a different origin, so avoid CORS issues
+            // (tradeoff: you can't reliably read the response body/status)
+            fetch(scriptURL, { method: 'POST', body: data, mode: 'no-cors' })
+                .then(() => {
+                    form.classList.add('hidden');
+                    msg.classList.remove('hidden');
+                })
+                .catch(error => console.error('Error!', error.message));
+        });
+    </script>
+</body>
+</html>
