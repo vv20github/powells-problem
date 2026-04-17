@@ -64,6 +64,121 @@
         const form = document.getElementById('forecastForm');
         const msg = document.getElementById('successMsg');
 
+        <script>
+  // Taylor-rule checker (based on the equation shown on the page):
+  // i_t = 0.75 + π_t + 0.5(π_t - 2) - (4.3 - u*)
+  //
+  // This script:
+  // - Computes the implied i_t from the entered inflation + natural unemployment
+  // - Compares it to the user-entered "Taylor Rule-implied Interest Rate"
+  // - Shows an inline error if they don’t match (within a small tolerance)
+  // - Blocks submit until it matches
+
+  (function () {
+    const form = document.getElementById('forecastForm');
+
+    const inflationEl = form.querySelector('input[name="inflation"]');
+    const uStarEl = form.querySelector('input[name="unemployment"]');
+    const iUserEl = form.querySelector('input[name="interestrate"]');
+
+    // Add a small helper text area under the interest-rate field
+    const hint = document.createElement('div');
+    hint.id = 'taylorHint';
+    hint.className = 'mt-2 text-sm';
+    iUserEl.parentElement.appendChild(hint);
+
+    // (Optional) add an "autofill" button next to the interest-rate label
+    const label = iUserEl.parentElement.querySelector('label');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className =
+      'ml-2 inline-flex items-center px-2 py-1 text-xs font-semibold rounded ' +
+      'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200';
+    btn.textContent = 'Auto-fill';
+    label.appendChild(btn);
+
+    function toNum(el) {
+      const v = parseFloat(el.value);
+      return Number.isFinite(v) ? v : null;
+    }
+
+    function impliedTaylorRate(pi, uStar) {
+      // i_t = 0.75 + π + 0.5(π - 2) - (4.3 - u*)
+      return 0.75 + pi + 0.5 * (pi - 2) - (4.3 - uStar);
+    }
+
+    function updateCheck() {
+      const pi = toNum(inflationEl);
+      const uStar = toNum(uStarEl);
+      const iUser = toNum(iUserEl);
+
+      // Clear state if not enough inputs yet
+      if (pi === null || uStar === null) {
+        hint.textContent = '';
+        hint.classList.remove('text-red-700', 'text-green-700');
+        iUserEl.setCustomValidity('');
+        return { ok: true, implied: null };
+      }
+
+      const implied = impliedTaylorRate(pi, uStar);
+      const impliedRounded = Math.round(implied * 100) / 100; // display as 2dp
+
+      // If user hasn't typed interest rate yet, just show what it should be
+      if (iUser === null) {
+        hint.textContent = `Taylor-implied iₜ ≈ ${impliedRounded.toFixed(2)}%`;
+        hint.classList.remove('text-red-700');
+        hint.classList.add('text-gray-600');
+        iUserEl.setCustomValidity('');
+        return { ok: true, implied };
+      }
+
+      // Allow a small tolerance (since they might round differently)
+      const tolerance = 0.05; // +/- 0.05 percentage points
+      const diff = Math.abs(iUser - implied);
+
+      if (diff <= tolerance) {
+        hint.textContent = `Looks good. Taylor-implied iₜ ≈ ${impliedRounded.toFixed(2)}%`;
+        hint.classList.remove('text-red-700', 'text-gray-600');
+        hint.classList.add('text-green-700');
+        iUserEl.setCustomValidity('');
+        return { ok: true, implied };
+      } else {
+        hint.textContent = `Check your Taylor calculation. Expected iₜ ≈ ${impliedRounded.toFixed(2)}% (±${tolerance}).`;
+        hint.classList.remove('text-green-700', 'text-gray-600');
+        hint.classList.add('text-red-700');
+        iUserEl.setCustomValidity('Taylor Rule check failed. Please correct the implied interest rate.');
+        return { ok: false, implied };
+      }
+    }
+
+    // Live validation as the user types
+    ['input', 'change', 'blur'].forEach(evt => {
+      inflationEl.addEventListener(evt, updateCheck);
+      uStarEl.addEventListener(evt, updateCheck);
+      iUserEl.addEventListener(evt, updateCheck);
+    });
+
+    // Autofill button sets the interest-rate input to the implied value (2dp)
+    btn.addEventListener('click', () => {
+      const pi = toNum(inflationEl);
+      const uStar = toNum(uStarEl);
+      if (pi === null || uStar === null) return;
+      const implied = impliedTaylorRate(pi, uStar);
+      iUserEl.value = (Math.round(implied * 100) / 100).toFixed(2);
+      updateCheck();
+    });
+
+    // Final gate on submit: prevent submit if invalid
+    form.addEventListener('submit', (e) => {
+      const { ok } = updateCheck();
+      if (!ok) {
+        e.preventDefault();
+        iUserEl.reportValidity();
+      }
+    });
+  })();
+</script>
+
         form.addEventListener('submit', e => {
             e.preventDefault();
             const data = new FormData(form);
