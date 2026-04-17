@@ -127,13 +127,13 @@
       const diff = Math.abs(iUser - implied);
 
       if (diff <= tolerance) {
-        hint.textContent = `Looks good. Taylor-implied iₜ ≈ ${impliedRounded.toFixed(2)}%`;
+        hint.textContent = `Looks good.`;
         hint.classList.remove('text-red-700', 'text-gray-600');
         hint.classList.add('text-green-700');
         iUserEl.setCustomValidity('');
         return { ok: true, implied };
       } else {
-        hint.textContent = `Check your Taylor calculation. Expected iₜ ≈ ${impliedRounded.toFixed(2)}% (±${tolerance}).`;
+        hint.textContent = `Check your Taylor calculation.`;
         hint.classList.remove('text-green-700', 'text-gray-600');
         hint.classList.add('text-red-700');
         iUserEl.setCustomValidity('Please check the interest rate calculation.');
